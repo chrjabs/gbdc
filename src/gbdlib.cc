@@ -184,4 +184,5 @@ PYBIND11_MODULE(gbdc, m) {
     m.def("pqbfhash", &PQBF::gbdhash, "Calculates PQBF-Hash (md5 of normalized file) of given PQBF file.", py::arg("filename"));
     m.def("wcnfhash", &WCNF::gbdhash, "Calculates WCNF-Hash (md5 of normalized file) of given WCNF file.", py::arg("filename"));
     m.def("wcnfisohash", &WCNF::isohash, "Calculates WCNF ISO-Hash of given WCNF file.", py::arg("filename"));
+    m.def("mcnfhash", &MCNF::gbdhash, "Calculates MCNF-Hash (md5 of normalized file) of given MCNF file.", py::arg("filename"));
 }

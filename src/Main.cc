@@ -249,6 +249,7 @@ int run_identify(const std::string& filename, const std::string& ext) {
     else if (ext == ".opb") hash = OPB::gbdhash(filename.c_str());
     else if (ext == ".qcnf" || ext == ".qdimacs") hash = PQBF::gbdhash(filename.c_str());
     else if (ext == ".wcnf") hash = WCNF::gbdhash(filename.c_str());
+    else if (ext == ".mcnf") hash = MCNF::gbdhash(filename.c_str());
     else throw std::runtime_error("identify: unsupported format " + ext);
     std::cout << hash << std::endl;
     return 0;

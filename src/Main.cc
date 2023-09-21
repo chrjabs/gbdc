@@ -140,6 +140,9 @@ int main(int argc, char** argv) {
             } else if (ext == ".wcnf") {
                 std::cerr << "Detected WCNF, using WCNF isohash" << std::endl;
                 std::cout << WCNF::isohash(filename.c_str()) << std::endl;
+            } else if (ext == ".mcnf") {
+                std::cerr << "Detected MCNF, using MCNF isohash" << std::endl;
+                std::cout << MCNF::isohash(filename.c_str()) << std::endl;
             }
         } else if (toolname == "opbhash") {
             std::cout << OPB::gbdhash(filename.c_str()) << std::endl;

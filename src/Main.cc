@@ -258,6 +258,7 @@ int run_identify(const std::string& filename, const std::string& ext) {
 int run_isohash(const std::string& filename, const std::string& ext, Mode mode) {
     std::string value;
     if (ext == ".wcnf") value = WCNF::isohash(filename.c_str());
+    else if (ext == ".mcnf") value = MCNF::isohash(filename.c_str());
     else if (ext == ".cnf") value = CNF::isohash(filename.c_str());
     else throw std::runtime_error("isohash: unsupported format " + ext);
     if (mode == Mode::GBD) std::cout << "isohash " << value << std::endl;

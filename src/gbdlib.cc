@@ -37,6 +37,7 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 #include "src/extract/CNFBaseFeatures.h"
 #include "src/extract/WCNFBaseFeatures.h"
 #include "src/extract/OPBBaseFeatures.h"
+#include "src/extract/MCNFBaseFeatures.h"
 
 #include "src/transform/cnf2kis.h"
 #include "src/transform/cnf2cnf.h"
@@ -146,6 +147,7 @@ PYBIND11_MODULE(gbdc, m) {
     m.doc() = "GBDC Python Bindings";
     m.def("extract_base_features", &extract_features<CNF::BaseFeatures>, "Extract cnf base features", py::arg("filepath"));
     m.def("extract_wcnf_base_features", &extract_features<WCNF::BaseFeatures>, "Extract wcnf base features", py::arg("filepath"));
+    m.def("extract_mcnf_base_features", &extract_features<MCNF::BaseFeatures>, "Extract mcnf base features", py::arg("filepath"));
     m.def("extract_opb_base_features", &extract_features<OPB::BaseFeatures>, "Extract opb base features", py::arg("filepath"));
     m.def("version", &version, "Return current version of gbdc.");
     m.def("cnf2kis", &cnf2kis, "Create k-ISP Instance from given CNF Instance.", py::arg("filename"), py::arg("output"));
@@ -155,6 +157,7 @@ PYBIND11_MODULE(gbdc, m) {
     m.def("checksani_feature_names", &checksani_feature_names, "Get checksani feature names");
     m.def("base_feature_names", &feature_names<CNF::BaseFeatures>, "Get Base Feature Names");
     m.def("wcnf_base_feature_names", &feature_names<WCNF::BaseFeatures>, "Get WCNF Base Feature Names");
+    m.def("mcnf_base_feature_names", &feature_names<MCNF::BaseFeatures>, "Get MCNF Base Feature Names");
     m.def("opb_base_feature_names", &feature_names<OPB::BaseFeatures>, "Get OPB Base Feature Names");
     m.def("gbdhash", &CNF::gbdhash, "Calculates GBD-Hash (md5 of normalized file) of given DIMACS CNF file.", py::arg("filename"));
     m.def("isohash", &CNF::isohash, "Calculates ISO-Hash (md5 of sorted degree sequence) of given DIMACS CNF file.", py::arg("filename"));

@@ -31,6 +31,7 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 #include "src/extract/CNFGateFeatures.h"
 #include "src/extract/WCNFBaseFeatures.h"
 #include "src/extract/OPBBaseFeatures.h"
+#include "src/extract/MCNFBaseFeatures.h"
 
 #include "src/transform/IndependentSet.h"
 #include "src/transform/Normalize.h"
@@ -215,6 +216,37 @@ static PyObject* extract_opb_base_features(PyObject* self, PyObject* arg) {
     }
 }
 
+
+static PyObject* extract_mcnf_base_features(PyObject* self, PyObject* arg) {
+    const char* filename;
+    unsigned rlim = 0, mlim = 0;
+    PyArg_ParseTuple(arg, "s|II", &filename, &rlim, &mlim);
+
+    PyObject *emergency = pydict();
+    pydict(emergency, "base_features_runtime", "memout");
+
+    ResourceLimits limits(rlim, mlim);
+    limits.set_rlimits();
+    try {
+        MCNF::BaseFeatures stats(filename);
+        stats.extract();
+        std::vector<double> record = stats.getFeatures();
+        std::vector<std::string> names = stats.getNames();
+        PyObject *dict = pydict();
+        pydict(dict, "base_features_runtime", limits.get_runtime());
+        for (unsigned int i = 0; i < record.size(); i++) {
+            pydict(dict, names[i].c_str(), record[i]);
+        }
+        return dict;
+    } catch (TimeLimitExceeded& e) {
+        pydict(emergency, "base_features_runtime", "timeout");
+        return emergency;
+    } catch (MemoryLimitExceeded& e) {
+        return emergency;
+    }
+}
+
+
 static PyObject* base_feature_names(PyObject* self) {
     PyObject *list = PyList_New(0);
     PyList_Append(list, pytype("base_features_runtime"));
@@ -252,6 +284,17 @@ static PyObject* opb_base_feature_names(PyObject* self) {
     PyObject *list = PyList_New(0);
     PyList_Append(list, pytype("base_features_runtime"));
     OPB::BaseFeatures stats("");
+    std::vector<std::string> names = stats.getNames();
+    for (unsigned int i = 0; i < names.size(); i++) {
+        PyList_Append(list, pytype(names[i].c_str()));
+    }
+    return list;
+}
+
+static PyObject* mcnf_base_feature_names(PyObject* self) {
+    PyObject *list = PyList_New(0);
+    PyList_Append(list, pytype("base_features_runtime"));
+    MCNF::BaseFeatures stats("");
     std::vector<std::string> names = stats.getNames();
     for (unsigned int i = 0; i < names.size(); i++) {
         PyList_Append(list, pytype(names[i].c_str()));
@@ -347,6 +390,8 @@ static PyMethodDef myMethods[] = {
     {"opb_base_feature_names", (PyCFunction)opb_base_feature_names, METH_NOARGS, "Get OPB Base Feature Names."},
     {"mcnfhash", mcnfhash, METH_VARARGS, "Calculates MCNF-Hash (md5 of normalized file) of given MCNF file."},
     {"mcnfisohash", mcnfisohash, METH_VARARGS, "Calculates MCNF ISO-Hash of given MCNF file."},
+    {"extract_mcnf_base_features", extract_mcnf_base_features, METH_VARARGS, "Extract MCNF Base Features."},
+    {"mcnf_base_feature_names", (PyCFunction)mcnf_base_feature_names, METH_NOARGS, "Get MCNF Base Feature Names."},
     {"version", (PyCFunction)version, METH_NOARGS, "Returns Version"},
     {nullptr, nullptr, 0, nullptr}
 };

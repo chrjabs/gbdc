@@ -4,5 +4,6 @@ add_library(extract OBJECT
     CNFGateFeatures.cc
     OPBBaseFeatures.cc
     WCNFBaseFeatures.cc
+    MCNFBaseFeatures.cc
 )
 set_property(TARGET extract PROPERTY POSITION_INDEPENDENT_CODE ON)

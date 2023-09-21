@@ -66,6 +66,7 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 #include "src/extract/CNFBaseFeatures.h"
 #include "src/extract/CNFGateFeatures.h"
 #include "src/extract/WCNFBaseFeatures.h"
+#include "src/extract/MCNFBaseFeatures.h"
 #include "src/extract/OPBBaseFeatures.h"
 
 
@@ -86,6 +87,7 @@ std::string tool_from_invocation(const std::string& argv0) {
         {"gbd-extract-base", "base"},
         {"gbd-extract-gate", "gate"},
         {"gbd-extract-wcnf", "wcnfbase"},
+        {"gbd-extract-mcnf", "mcnfbase"},
         {"gbd-extract-opb", "opbbase"},
         {"gbd-checksani", "checksani"},
         {"gbd-isohash2", "isohash2"},
@@ -149,6 +151,10 @@ IExtractor* make_extractor(const std::string& tool, const std::string& ext, cons
         if (ext == ".wcnf") return new WCNF::BaseFeatures(filename.c_str());
         throw std::runtime_error("wcnf extractor requires a .wcnf file");
     }
+    if (tool == "mcnfbase") {
+        if (ext == ".mcnf") return new MCNF::BaseFeatures(filename.c_str());
+        throw std::runtime_error("mcnf extractor requires a .mcnf file");
+    }
     if (tool == "opbbase") {
         if (ext == ".opb") return new OPB::BaseFeatures(filename.c_str());
         throw std::runtime_error("opb extractor requires a .opb file");
@@ -161,6 +167,7 @@ std::vector<std::string> extractor_feature_names(const std::string& tool) {
     if (tool == "base") return CNF::BaseFeatures("").getNames();
     if (tool == "gate") return CNF::GateFeatures("").getNames();
     if (tool == "wcnfbase") return WCNF::BaseFeatures("").getNames();
+    if (tool == "mcnfbase") return MCNF::BaseFeatures("").getNames();
     if (tool == "opbbase") return OPB::BaseFeatures("").getNames();
     throw std::runtime_error("unknown extractor: " + tool);
 }
@@ -396,7 +403,7 @@ std::vector<std::pair<std::string, std::string>> transformer_feature_names(const
 /* --- Dispatch helpers ---------------------------------------------------------------------- */
 
 bool is_extractor(const std::string& tool) {
-    return tool == "base" || tool == "gate" || tool == "wcnfbase" || tool == "opbbase";
+    return tool == "base" || tool == "gate" || tool == "wcnfbase" || tool == "mcnfbase" || tool == "opbbase";
 }
 
 bool is_transformer(const std::string& tool) {
@@ -440,7 +447,7 @@ int main(int argc, char** argv) {
     if (invocation_tool.empty()) {
         program.add_argument("tool").help(
             "Tool: identify, isohash, isohash2, normalize, sanitize, checksani, "
-            "cnf2kis, cnf2bip, base, gate, wcnfbase, opbbase");
+            "cnf2kis, cnf2bip, base, gate, wcnfbase, mcnf, opbbase");
     }
     program.add_argument("file").remaining().help("Path to input file");
     program.add_argument("-o", "--output").default_value(std::string("-"))

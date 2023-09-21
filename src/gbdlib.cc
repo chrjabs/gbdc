@@ -81,6 +81,13 @@ static PyObject* wcnfisohash(PyObject* self, PyObject* arg) {
     return pytype(result.c_str());
 }
 
+static PyObject* mcnfhash(PyObject* self, PyObject* arg) {
+    const char* filename;
+    PyArg_ParseTuple(arg, "s", &filename);
+    std::string result = MCNF::gbdhash(filename);
+    return pytype(result.c_str());
+}
+
 
 static PyObject* extract_base_features(PyObject* self, PyObject* arg) {
     const char* filename;
@@ -331,6 +338,7 @@ static PyMethodDef myMethods[] = {
     {"wcnf_base_feature_names", (PyCFunction)wcnf_base_feature_names, METH_NOARGS, "Get WCNF Base Feature Names."},
     {"extract_opb_base_features", extract_opb_base_features, METH_VARARGS, "Extract OPB Base Features."},
     {"opb_base_feature_names", (PyCFunction)opb_base_feature_names, METH_NOARGS, "Get OPB Base Feature Names."},
+    {"mcnfhash", mcnfhash, METH_VARARGS, "Calculates MCNF-Hash (md5 of normalized file) of given MCNF file."},
     {"version", (PyCFunction)version, METH_NOARGS, "Returns Version"},
     {nullptr, nullptr, 0, nullptr}
 };

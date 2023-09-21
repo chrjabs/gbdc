@@ -206,4 +206,45 @@ namespace WCNF {
     }
 } // namespace WCNF
 
+namespace MCNF {
+    std::string gbdhash(const char* filename) {
+        MD5 md5;
+        StreamBuffer in(filename);
+        bool notfirst = false;
+        while (in.skipWhitespace()) {
+            if (*in == 'c') {
+                if (!in.skipLine()) break;
+            } else if (*in == 'h') {
+                in.skip();
+                if (notfirst) md5.consume(" ", 1);
+                md5.consume("h ", 2);
+                std::string plit;
+                while (in.readNumber(&plit)) {
+                    if (plit == "0") break;
+                    md5.consume(plit.c_str(), plit.length());
+                    md5.consume(" ", 1);
+                }
+                md5.consume("0", 1);
+            } else {
+                if (notfirst) md5.consume(" ", 1);
+                assert(*in == 'o');
+                in.skip();
+                md5.consume("o", 1);
+                std::string nbr;
+                in.readNumber(&nbr);
+                md5.consume(nbr.c_str(), nbr.length());
+                md5.consume(" ", 1);
+                while (in.readNumber(&nbr)) {
+                    if (nbr == "0") break;
+                    md5.consume(nbr.c_str(), nbr.length());
+                    md5.consume(" ", 1);
+                }
+                md5.consume("0", 1);
+                notfirst = true;
+            }
+        }
+        return md5.produce();
+    }
+} // namespace MCNF
+
 #endif  // GBDHASH_H_

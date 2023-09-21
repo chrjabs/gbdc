@@ -123,6 +123,10 @@ int main(int argc, char** argv) {
                 std::cerr << "Detected WCNF, using WCNF hash" << std::endl;
                 std::cout << WCNF::gbdhash(filename.c_str()) << std::endl;
             }
+            else if (ext == ".mcnf") {
+                std::cerr << "Detected MCNF, using MCNF hash" << std::endl;
+                std::cout << MCNF::gbdhash(filename.c_str()) << std::endl;
+            }
         } else if (toolname == "gbdhash") {
             std::cout << CNF::gbdhash(filename.c_str()) << std::endl;
         } else if (toolname == "isohash") {

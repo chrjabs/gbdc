@@ -6,8 +6,12 @@
 #pragma once
 
 #include "IExtractor.h"
+#include "MultiObjective.h"
+#include <array>
 
 #include "src/util/StreamBuffer.h"
+
+namespace MOPB{ class BaseFeatures; }
 
 namespace OPB {
 
@@ -17,6 +21,7 @@ class BaseFeatures;
 class TermSum {
     friend Constr;
     friend BaseFeatures;
+    friend MOPB::BaseFeatures;
 
     std::vector<double> coeffs{};
     double max = 0;
@@ -36,6 +41,7 @@ class TermSum {
 
 class Constr {
     friend BaseFeatures;
+    friend MOPB::BaseFeatures;
     
   public:
     enum Rel { GE, EQ };
@@ -81,3 +87,29 @@ class BaseFeatures : public IExtractor {
 };
 
 }; // namespace OPB
+
+namespace MOPB {
+
+class BaseFeatures : public IExtractor {
+    const char* filename_;
+
+    unsigned n_vars = 0, n_constraints = 0, n_objectives = 0;
+    unsigned n_pbs_ge = 0, n_pbs_eq = 0;
+    unsigned n_cards_ge = 0, n_cards_eq = 0;
+    unsigned n_clauses = 0, n_assignments = 0;
+    bool trivially_unsat = false;
+
+    std::array<unsigned, N_OBJ_ANALYZED> obj_terms{};
+    std::array<int, N_OBJ_ANALYZED> obj_max_val{};
+    std::array<int, N_OBJ_ANALYZED> obj_min_val{};
+    std::array<std::vector<double>, N_OBJ_ANALYZED> obj_coeffs{};
+
+    void load_feature_record();
+
+  public:
+    BaseFeatures(const char* filename);
+    virtual ~BaseFeatures();
+    virtual void run();
+};
+
+}; // namespace MOPB

@@ -1,6 +1,6 @@
 /**
  * MIT License
- * Copyright (c) 2025 Ashlin Iser 
+ * Copyright (c) 2024-2025 Ashlin Iser, Christoph Jabs
  */
 
 #include "OPBBaseFeatures.h"
@@ -73,7 +73,7 @@ OPB::Constr::Constr(StreamBuffer &in) : terms(in) {
 typename OPB::Constr::Analysis OPB::Constr::analyse() {
     Analysis a {};
     if (terms.nTerms()) {
-        int multiplier = abs(terms.coeffs.front());
+        int multiplier = std::abs(terms.coeffs.front());
         a.card = true;
         for (int coeff: terms.coeffs) {
             if (std::abs(coeff) != multiplier) {
@@ -189,4 +189,111 @@ void OPB::BaseFeatures::load_feature_record() {
     setFeature("obj_min_val", (double)obj_min_val);
     std::vector<double> stats = getDistributionStats(obj_coeffs);
     setFeatures({ "obj_coeffs_mean", "obj_coeffs_variance", "obj_coeffs_min", "obj_coeffs_max", "obj_coeffs_entropy" }, stats.begin(), stats.end());
+}
+
+MOPB::BaseFeatures::BaseFeatures(const char* filename) : filename_(filename) {
+    obj_terms.fill(0);
+    obj_max_val.fill(0);
+    obj_min_val.fill(0);
+    obj_coeffs.fill({});
+
+    initFeatures({ "constraints", "variables" });
+    initFeatures({ "pbs_ge", "pbs_eq", "cards_ge", "cards_eq" });
+    initFeatures({ "clauses", "assignments", "trivially_unsat" });
+    std::vector<std::string> o_features = { "terms", "max_val", "min_val",
+        "coeffs_mean", "coeffs_variance", "coeffs_min", "coeffs_max",
+        "coeffs_entropy" };
+    for (unsigned oidx = 0; oidx < N_OBJ_ANALYZED; oidx++) {
+        const auto prefix = "obj_" + std::to_string(oidx + 1) + "_";
+        for (auto& feat : o_features) {
+            setFeature(prefix + feat, 0.0);
+        }
+    }
+}
+
+MOPB::BaseFeatures::~BaseFeatures() { }
+
+void MOPB::BaseFeatures::run() {
+    StreamBuffer in(filename_);
+
+    bool seen_obj = false;
+    while (in.skipWhitespace()) {
+        if (*in == '*') {
+            in.skipLine();
+        } else if (*in == 'm') {
+            in.skipString("min:");
+            n_objectives++;
+            // if more than N_OBJ_ANALYZED objectives are encountered, ignore them
+            if (n_objectives >= N_OBJ_ANALYZED) {
+                in.skipLine();
+                continue;
+            }
+            seen_obj = true;
+            OPB::TermSum obj(in);
+            obj_terms[n_objectives - 1] = obj.nTerms();
+            obj_max_val[n_objectives - 1] = obj.maxVal();
+            obj_min_val[n_objectives - 1] = obj.minVal();
+            obj_coeffs[n_objectives - 1] = obj.coeffs;
+            if (obj.maxVar() > n_vars) n_vars = obj.maxVar();
+            in.skipWhitespace();
+            if (*in == ';') in.skip();
+        } else {
+            n_constraints++;
+
+            OPB::Constr constr(in);
+            if (constr.maxVar() > n_vars) n_vars = constr.maxVar();
+            OPB::Constr::Analysis a = constr.analyse();
+            if (a.unsat) {
+                trivially_unsat = true;
+            }
+            if (a.assignment) {
+                n_assignments++;
+            }
+            if (a.clause) {
+                n_clauses++;
+            } else if (a.card) {
+                switch (constr.rel) {
+                    case OPB::Constr::GE:
+                        n_cards_ge++;
+                        break;
+                    case OPB::Constr::EQ:
+                        n_cards_eq++;
+                }
+            } else {
+                switch (constr.rel) {
+                    case OPB::Constr::GE:
+                        n_pbs_ge++;
+                        break;
+                    case OPB::Constr::EQ:
+                        n_pbs_eq++;
+                }
+            }
+        }
+    }
+
+    load_feature_record();
+}
+
+void MOPB::BaseFeatures::load_feature_record() {
+    setFeature("constraints", (double)n_constraints);
+    setFeature("variables", (double)n_vars);
+    setFeature("objectives", (double)n_objectives);
+    setFeature("pbs_ge", (double)n_pbs_ge);
+    setFeature("pbs_eq", (double)n_pbs_eq);
+    setFeature("cards_ge", (double)n_cards_ge);
+    setFeature("cards_eq", (double)n_cards_eq);
+    setFeature("clauses", (double)n_clauses);
+    setFeature("assignments", (double)n_assignments);
+    setFeature("trivially_unsat", (double)trivially_unsat);
+    for (unsigned oidx = 0; oidx < N_OBJ_ANALYZED; oidx++) {
+        const auto prefix = "obj_" + std::to_string(oidx + 1) + "_";
+        setFeature(prefix + "terms", (double)obj_terms[oidx]);
+        setFeature(prefix + "max_val", (double)obj_max_val[oidx]);
+        setFeature(prefix + "min_val", (double)obj_min_val[oidx]);
+        std::vector<double> stats = getDistributionStats(obj_coeffs[oidx]);
+        setFeatures({ prefix + "coeffs_mean", prefix + "coeffs_variance",
+                      prefix + "coeffs_min", prefix + "coeffs_max",
+                      prefix + "coeffs_entropy" },
+                    stats.begin(), stats.end());
+    }
 }

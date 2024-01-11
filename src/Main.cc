@@ -89,6 +89,7 @@ std::string tool_from_invocation(const std::string& argv0) {
         {"gbd-extract-wcnf", "wcnfbase"},
         {"gbd-extract-mcnf", "mcnfbase"},
         {"gbd-extract-opb", "opbbase"},
+        {"gbd-extract-mopb", "mopbbase"},
         {"gbd-checksani", "checksani"},
         {"gbd-isohash2", "isohash2"},
         {"gbd-isohash", "isohash"},
@@ -159,6 +160,10 @@ IExtractor* make_extractor(const std::string& tool, const std::string& ext, cons
         if (ext == ".opb") return new OPB::BaseFeatures(filename.c_str());
         throw std::runtime_error("opb extractor requires a .opb file");
     }
+    if (tool == "mopbbase") {
+        if (ext == ".opb" || ext == ".mopb" || ext == ".pbmo") return new MOPB::BaseFeatures(filename.c_str());
+        throw std::runtime_error("opb extractor requires a .opb file");
+    }
     throw std::runtime_error("unknown extractor: " + tool);
 }
 
@@ -169,6 +174,7 @@ std::vector<std::string> extractor_feature_names(const std::string& tool) {
     if (tool == "wcnfbase") return WCNF::BaseFeatures("").getNames();
     if (tool == "mcnfbase") return MCNF::BaseFeatures("").getNames();
     if (tool == "opbbase") return OPB::BaseFeatures("").getNames();
+    if (tool == "mopbbase") return MOPB::BaseFeatures("").getNames();
     throw std::runtime_error("unknown extractor: " + tool);
 }
 
@@ -253,7 +259,7 @@ int run_checksani(const std::string& filename, Mode mode) {
 int run_identify(const std::string& filename, const std::string& ext) {
     std::string hash;
     if (ext == ".cnf" || ext == ".wecnf") hash = CNF::gbdhash(filename.c_str());
-    else if (ext == ".opb") hash = OPB::gbdhash(filename.c_str());
+    else if (ext == ".opb" || ext == ".mopb" || ext == ".pbmo") hash = OPB::gbdhash(filename.c_str());
     else if (ext == ".qcnf" || ext == ".qdimacs") hash = PQBF::gbdhash(filename.c_str());
     else if (ext == ".wcnf") hash = WCNF::gbdhash(filename.c_str());
     else if (ext == ".mcnf") hash = MCNF::gbdhash(filename.c_str());
@@ -403,7 +409,7 @@ std::vector<std::pair<std::string, std::string>> transformer_feature_names(const
 /* --- Dispatch helpers ---------------------------------------------------------------------- */
 
 bool is_extractor(const std::string& tool) {
-    return tool == "base" || tool == "gate" || tool == "wcnfbase" || tool == "mcnfbase" || tool == "opbbase";
+    return tool == "base" || tool == "gate" || tool == "wcnfbase" || tool == "mcnfbase" || tool == "opbbase" || tool == "mopbbase";
 }
 
 bool is_transformer(const std::string& tool) {
@@ -447,7 +453,7 @@ int main(int argc, char** argv) {
     if (invocation_tool.empty()) {
         program.add_argument("tool").help(
             "Tool: identify, isohash, isohash2, normalize, sanitize, checksani, "
-            "cnf2kis, cnf2bip, base, gate, wcnfbase, mcnf, opbbase");
+            "cnf2kis, cnf2bip, base, gate, wcnfbase, mcnf, opbbase, mopbbase");
     }
     program.add_argument("file").remaining().help("Path to input file");
     program.add_argument("-o", "--output").default_value(std::string("-"))

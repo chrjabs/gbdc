@@ -169,6 +169,7 @@ PYBIND11_MODULE(gbdc, m) {
     m.def("extract_wcnf_base_features", &extract_features<WCNF::BaseFeatures>, "Extract wcnf base features", py::arg("filepath"), py::arg("rlim"), py::arg("mlim"));
     m.def("extract_mcnf_base_features", &extract_features<MCNF::BaseFeatures>, "Extract mcnf base features", py::arg("filepath"), py::arg("rlim"), py::arg("mlim"));
     m.def("extract_opb_base_features", &extract_features<OPB::BaseFeatures>, "Extract opb base features", py::arg("filepath"), py::arg("rlim"), py::arg("mlim"));
+    m.def("extract_mopb_base_features", &extract_features<MOPB::BaseFeatures>, "Extract mopb base features", py::arg("filepath"), py::arg("rlim"), py::arg("mlim"));
     m.def("version", &version, "Return current version of gbdc.");
     m.def("cnf2kis", &cnf2kis, "Create k-ISP Instance from given CNF Instance.", py::arg("filename"), py::arg("output"));
     m.def("normalise", &normalise, "Print normalised CNF to output file: whitespace and header normalised, comments removed.", py::arg("filename"), py::arg("output"));
@@ -180,6 +181,7 @@ PYBIND11_MODULE(gbdc, m) {
     m.def("wcnf_base_feature_names", &feature_names<WCNF::BaseFeatures>, "Get WCNF Base Feature Names");
     m.def("mcnf_base_feature_names", &feature_names<MCNF::BaseFeatures>, "Get MCNF Base Feature Names");
     m.def("opb_base_feature_names", &feature_names<OPB::BaseFeatures>, "Get OPB Base Feature Names");
+    m.def("mopb_base_feature_names", &feature_names<MOPB::BaseFeatures>, "Get MOPB Base Feature Names");
     m.def("gbdhash", &CNF::gbdhash, "Calculates GBD-Hash (md5 of normalized file) of given DIMACS CNF file.", py::arg("filename"));
     m.def("isohash", &CNF::isohash, "Calculates ISO-Hash (md5 of sorted degree sequence) of given DIMACS CNF file.", py::arg("filename"));
     m.def("isohash2", [](const char* filename) { return CNF::isohash2(filename); }, "Calculates the more advanced ISO-Hash2 (xxhash of Weisfeiler Leman coloring) of given DIMACS CNF file.", py::arg("filename"));

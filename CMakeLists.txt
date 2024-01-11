@@ -90,7 +90,7 @@ set_property(TARGET gbdctool PROPERTY OUTPUT_NAME gbdc)
 # Per-tool commands: thin `gbd-<tool>` executables realised as symlinks to the single `gbdc`
 # binary, which dispatches on its invocation name (argv[0]). See src/Main.cc.
 set(GBD_TOOL_NAMES
-    gbd-extract-base gbd-extract-gate gbd-extract-wcnf gbd-extract-mcnf gbd-extract-opb
+    gbd-extract-base gbd-extract-gate gbd-extract-wcnf gbd-extract-mcnf gbd-extract-opb gbd-extract-mopb
     gbd-checksani gbd-isohash gbd-isohash2 gbd-identify
     gbd-cnf2kis gbd-cnf2bip gbd-sanitize gbd-normalize)
 

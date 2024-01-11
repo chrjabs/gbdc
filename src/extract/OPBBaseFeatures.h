@@ -11,6 +11,8 @@
 #include "src/util/StreamBuffer.h"
 #include "src/extract/Util.h"
 
+namespace MOPB{ class BaseFeatures; }
+
 namespace OPB {
     
 class Constr;
@@ -19,6 +21,7 @@ class BaseFeatures;
 class TermSum {
     friend Constr;
     friend BaseFeatures;
+    friend MOPB::BaseFeatures;
 
     std::vector<double> coeffs{};
     double max = 0;
@@ -77,6 +80,7 @@ class TermSum {
 
 class Constr {
     friend BaseFeatures;
+    friend MOPB::BaseFeatures;
     
   public:
     enum Rel { GE, EQ };
@@ -251,6 +255,130 @@ class BaseFeatures : public IExtractor {
 };
 
 }; // namespace OPB
+
+namespace MOPB {
+
+class BaseFeatures : public IExtractor {
+    static const unsigned N_OBJ_ANALYZED = 9;
+
+    const char* filename_;
+    std::vector<double> features;
+    std::vector<std::string> names;
+
+    unsigned n_vars = 0, n_constraints = 0, n_objectives = 0;
+    unsigned n_pbs_ge = 0, n_pbs_eq = 0;
+    unsigned n_cards_ge = 0, n_cards_eq = 0;
+    unsigned n_clauses = 0, n_assignments = 0;
+    bool trivially_unsat = false;
+
+    std::vector<unsigned> obj_terms{};
+    std::vector<int> obj_max_val{};
+    std::vector<int> obj_min_val{};
+    std::vector<std::vector<int>> obj_coeffs{};
+
+  public:
+    BaseFeatures(const char* filename) : filename_(filename), features(), names() {
+        names.insert(names.end(), { "constraints", "variables", "objectives" });
+        names.insert(names.end(), { "pbs_ge", "pbs_eq", "cards_ge", "cards_eq" });
+        names.insert(names.end(), { "clauses", "assignments", "trivially_unsat" });
+        std::vector<std::string> o_features = { "terms", "max_val", "min_val",
+            "coeffs_mean", "coeffs_variance", "coeffs_min", "coeffs_max",
+            "coeffs_entropy" };
+        for (unsigned oidx = 0; oidx < N_OBJ_ANALYZED; oidx++) {
+            for (auto& feat : o_features) {
+                names.push_back("obj_" + std::to_string(oidx + 1) + "_" + feat);
+            }
+        }
+    }
+
+    virtual ~BaseFeatures() { }
+
+    virtual void extract() {
+        StreamBuffer in(filename_);
+
+        bool seen_obj = false;
+        while (in.skipWhitespace()) {
+            if (*in == '*') {
+                in.skipLine();
+            } else if (*in == 'm') {
+                in.skipString("min:");
+                n_objectives++;
+                // if more than N_OBJ_ANALYZED objectives are encountered, ignore them
+                if (n_objectives >= N_OBJ_ANALYZED) {
+                    in.skipLine();
+                    continue;
+                }
+                seen_obj = true;
+                OPB::TermSum obj(in);
+                obj_terms.push_back(obj.nTerms());
+                obj_max_val.push_back(obj.maxVal());
+                obj_min_val.push_back(obj.minVal());
+                obj_coeffs.push_back(obj.coeffs);
+                if (obj.maxVar() > n_vars) n_vars = obj.maxVar();
+                in.skipWhitespace();
+                if (*in == ';') in.skip();
+            } else {
+                n_constraints++;
+
+                OPB::Constr constr(in);
+                if (constr.maxVar() > n_vars) n_vars = constr.maxVar();
+                OPB::Constr::Analysis a = constr.analyse();
+                if (a.unsat) {
+                    trivially_unsat = true;
+                }
+                if (a.assignment) {
+                    n_assignments++;
+                }
+                if (a.clause) {
+                    n_clauses++;
+                } else if (a.card) {
+                    switch (constr.rel) {
+                        case OPB::Constr::GE:
+                            n_cards_ge++;
+                            break;
+                        case OPB::Constr::EQ:
+                            n_cards_eq++;
+                    }
+                } else {
+                    switch (constr.rel) {
+                        case OPB::Constr::GE:
+                            n_pbs_ge++;
+                            break;
+                        case OPB::Constr::EQ:
+                            n_pbs_eq++;
+                    }
+                }
+            }
+        }
+
+        load_feature_record();
+    }
+
+    void load_feature_record() {
+        features.insert(features.end(), { (double)n_constraints, (double)n_vars, (double) n_objectives });
+        features.insert(features.end(), { (double)n_pbs_ge, (double)n_pbs_eq });
+        features.insert(features.end(), { (double)n_cards_ge, (double)n_cards_eq });
+        features.insert(features.end(), { (double)n_clauses, (double)n_assignments });
+        features.insert(features.end(), { (double)trivially_unsat });
+        for (unsigned oidx = 0; oidx < std::min(n_objectives, N_OBJ_ANALYZED); oidx++) {
+            features.insert(features.end(), { (double)obj_terms[oidx], (double)obj_max_val[oidx], (double)obj_min_val[oidx] });
+            push_distribution(features, obj_coeffs[0]);
+        }
+        for (unsigned oidx = n_objectives; oidx < N_OBJ_ANALYZED; oidx++) {
+            features.insert(features.end(), { 0., 0., 0., 0., 0., 0., 0., 0. });
+        }
+    }
+
+    virtual std::vector<double> getFeatures() const {
+        return features;
+    }
+
+    virtual std::vector<std::string> getNames() const {
+        return names;
+    }
+};
+
+}; // namespace MOPB
 
 
 #endif // OPB_BASE_FEATURES_H_

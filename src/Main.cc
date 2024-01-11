@@ -112,8 +112,8 @@ int main(int argc, char** argv) {
                 std::cerr << "Detected CNF, using CNF hash" << std::endl;
                 std::cout << CNF::gbdhash(filename.c_str()) << std::endl;
             }
-            else if (ext == ".opb") {
-                std::cerr << "Detected OPB, using OPB hash" << std::endl;
+            else if (ext == ".opb" || ext == ".mopb") {
+                std::cerr << "Detected (M)OPB, using (M)OPB hash" << std::endl;
                 std::cout << OPB::gbdhash(filename.c_str()) << std::endl;
             }
             else if (ext == ".qcnf" || ext == ".qdimacs") {
@@ -197,6 +197,15 @@ int main(int argc, char** argv) {
             } else if (ext == ".mcnf") {
                 std::cerr << "Detected MCNF, extracting MCNF base features" << std::endl;
                 MCNF::BaseFeatures stats(filename.c_str());
+                stats.extract();
+                std::vector<double> record = stats.getFeatures();
+                std::vector<std::string> names = stats.getNames();
+                for (unsigned i = 0; i < record.size(); i++) {
+                    std::cout << names[i] << "=" << record[i] << std::endl;
+                }
+            } else if (ext == ".mopb") {
+                std::cerr << "Detected MOPB, extracting MOPB base features" << std::endl;
+                MOPB::BaseFeatures stats(filename.c_str());
                 stats.extract();
                 std::vector<double> record = stats.getFeatures();
                 std::vector<std::string> names = stats.getNames();

@@ -30,7 +30,7 @@ md5_t
 gbdhash
 cnftools
 
-build/
+build*/
 .vscode/
 uninstall.info
 dist/

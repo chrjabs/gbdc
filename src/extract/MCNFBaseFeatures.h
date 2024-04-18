@@ -10,12 +10,11 @@
 #include "IExtractor.h"
 #include "src/util/StreamBuffer.h"
 #include "src/extract/Util.h"
+#include "src/extract/MultiObjective.h"
 
 namespace MCNF {
 
 class BaseFeatures1 : public IExtractor {
-    static const unsigned N_OBJ_ANALYZED = 9;
-
     const char* filename_;
     std::vector<double> features;
     std::vector<std::string> names;

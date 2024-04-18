@@ -255,9 +255,9 @@ public:
 
 namespace MOPB {
 
-class BaseFeatures : public IExtractor {
-  static const unsigned N_OBJ_ANALYZED = 9;
+#include "src/extract/MultiObjective.h"
 
+class BaseFeatures : public IExtractor {
   const char *filename_;
   std::vector<double> features;
   std::vector<std::string> names;

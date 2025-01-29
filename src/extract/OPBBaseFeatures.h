@@ -99,6 +99,7 @@ public:
       in.skipString(">=");
     } else {
       assert(*in == '=');
+      rel = EQ;
       in.skip();
     }
     in.readNumber(&strbound);

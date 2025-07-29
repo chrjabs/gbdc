@@ -67,3 +67,10 @@ makefile
 config.*
 autom4te.cache
 conf.*
+gbd-*
+gbdc
+test/tests_feature_extraction
+test/tests_gbdlib
+test/tests_ishohash2
+test/tests_streambuffer
+test/tests_streamcompressor
